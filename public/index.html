@@ -3,11 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cosas de clases</title>
+  <title>Entornos virtuales en Python</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hola</h1>
-  <script src="script.js"></script>
+  <main>
+    <h1>¿Qué problema resuelve un entorno virtual?</h1>
+    <p>
+      Sin entornos virtuales, todas las librerías se instalan en el mismo sitio: el Python del sistema.
+      Si un proyecto necesita <code>django 3</code> y otro <code>django 5</code>, chocan. Además, instalar
+      paquetes a mano en el Python del sistema puede romper herramientas que dependen de él y suele pedir
+      permisos de administrador.
+    </p>
+    <p>
+      Un entorno virtual da a cada proyecto su propio espacio de librerías, independiente de los demás y del
+      sistema. También permite reproducir el proyecto en otra máquina: con <code>pip freeze &gt; requirements.txt</code>
+      se guarda la lista exacta de dependencias y se reinstala con <code>pip install -r requirements.txt</code>.
+    </p>
+
+    <h2>¿Qué crea realmente <code>python -m venv .venv</code>?</h2>
+    <p>Crea una carpeta llamada <code>.venv</code> con esta estructura:</p>
+    <ul>
+      <li><code>pyvenv.cfg</code>: un archivo de texto que indica dónde está el Python base con el que se creó
+        (<code>home = ...</code>) y si el entorno ve o no las librerías del sistema.</li>
+      <li><code>bin/</code> (en Windows, <code>Scripts\</code>): contiene <code>python</code> (un enlace
+        simbólico o copia del intérprete base), <code>pip</code> y los scripts de activación.</li>
+      <li><code>lib/pythonX.Y/site-packages/</code> (en Windows, <code>Lib\site-packages</code>): la carpeta donde
+        se instalarán las librerías. Al principio solo trae <code>pip</code>.</li>
+    </ul>
+    <p>
+      No copia la biblioteca estándar de Python: el entorno sigue usando la del Python base.
+      Por eso es muy ligero (unos pocos MB).
+    </p>
+
+    <h2>¿Dónde se guardan las librerías que instalamos dentro de él?</h2>
+    <p>
+      En <code>.venv/lib/pythonX.Y/site-packages/</code> (en Windows, <code>.venv\Lib\site-packages\</code>).
+      Cada entorno tiene la suya, así que lo instalado en un proyecto no afecta a los demás. Si se borra la
+      carpeta <code>.venv</code>, desaparece todo y se puede recrear desde <code>requirements.txt</code>.
+      Por eso la carpeta no se sube a Git (va en <code>.gitignore</code>) y sí se sube el
+      <code>requirements.txt</code>.
+    </p>
+
+    <h2>¿Qué ocurre realmente cuando lo “activamos”?</h2>
+    <p>
+      Activar (<code>source .venv/bin/activate</code>, o <code>.venv\Scripts\activate</code> en Windows) ejecuta
+      un script que solo modifica la terminal actual:
+    </p>
+    <ul>
+      <li>Añade <code>.venv/bin</code> al principio de la variable <code>PATH</code>, de modo que al escribir
+        <code>python</code> o <code>pip</code> se ejecutan los del entorno y no los del sistema.</li>
+      <li>Define la variable <code>VIRTUAL_ENV</code>.</li>
+      <li>Cambia el prompt para mostrar <code>(.venv)</code>.</li>
+      <li>Crea la función <code>deactivate</code>, que deshace todo lo anterior.</li>
+    </ul>
+    <p>
+      No instala nada ni cambia Python: es solo un atajo para que los comandos apunten al sitio correcto.
+      Cuando el intérprete del entorno arranca, lee el <code>pyvenv.cfg</code> que tiene al lado y configura
+      sus rutas para usar el <code>site-packages</code> del entorno.
+    </p>
+
+    <h2>¿Es obligatorio activarlo para utilizarlo?</h2>
+    <p>
+      No. Basta con llamar directamente al Python del entorno:
+    </p>
+    <pre>.venv/bin/python script.py
+.venv/bin/pip install requests</pre>
+    <p>
+      Funciona igual, porque ese intérprete detecta su <code>pyvenv.cfg</code> y usa su propio
+      <code>site-packages</code>. Activar es solo una comodidad al trabajar en la terminal. En scripts,
+      tareas programadas, CI o servidores se suele llamar directamente a la ruta del Python del entorno.
+    </p>
+
+    <h2>¿Qué diferencia hay entre un venv y una máquina virtual como VirtualBox?</h2>
+    <p>
+      Una máquina virtual emula un ordenador completo: tiene su propio sistema operativo y kernel, ocupa
+      gigas y está muy aislada del equipo anfitrión. Un venv es solo una carpeta con un intérprete de Python
+      enlazado y unas librerías: comparte el sistema operativo, los procesos, los archivos y la red con el
+      resto del equipo.
+    </p>
+    <p>
+      Además, un venv solo aísla paquetes de Python. No aísla la versión de Python (usa la del Python base con
+      el que se creó) ni las librerías del sistema que algunos paquetes necesitan. Para aislar eso hacen falta
+      contenedores (como Docker) o máquinas virtuales.
+    </p>
+  </main>
 </body>
 </html>
